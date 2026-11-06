@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Number Guessing Game</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f2f5fb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(100%, 440px);
+      padding: 36px;
+      border: 1px solid #e3e8f2;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 20px 60px #25365a18;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #5b68d8;
+      font-size: 0.8rem;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(1.8rem, 7vw, 2.4rem); }
+    .intro { margin: 12px 0 28px; color: #667085; line-height: 1.55; }
+    label { display: block; margin-bottom: 8px; font-weight: 650; }
+
+    select, input, button {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #d5dbea;
+      border-radius: 12px;
+      font: inherit;
+    }
+
+    select, input { padding: 0 14px; background: #fff; color: inherit; }
+    input { margin-top: 18px; }
+
+    button {
+      margin-top: 12px;
+      border: 0;
+      background: #5865d8;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #4653c2; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #aeb5ff;
+      outline-offset: 2px;
+    }
+
+    .status {
+      min-height: 28px;
+      margin: 18px 0 0;
+      color: #475467;
+      font-weight: 600;
+    }
+
+    .attempts { margin: 8px 0 0; color: #667085; font-size: 0.95rem; }
+    .new-game { background: #eef0ff; color: #4653c2; }
+    .new-game:hover { background: #e2e5ff; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">A little brain game</p>
+    <h1>Guess the number</h1>
+    <p class="intro">Pick a difficulty, then find the secret number with the fewest guesses.</p>
+
+    <label for="difficulty">Difficulty</label>
+    <select id="difficulty">
+      <option value="50">Easy · 1 to 50</option>
+      <option value="100" selected>Medium · 1 to 100</option>
+      <option value="200">Hard · 1 to 200</option>
+    </select>
+
+    <form id="guess-form">
+      <label for="guess" style="margin-top: 20px">Your guess</label>
+      <input id="guess" type="number" min="1" max="100" placeholder="Enter a whole number" required>
+      <button type="submit">Check my guess</button>
+    </form>
+
+    <p id="status" class="status" role="status" aria-live="polite">I'm thinking of a number. You can do it!</p>
+    <p id="attempts" class="attempts">Guesses: 0</p>
+    <button id="new-game" class="new-game" type="button" hidden>Start a new game</button>
+  </main>
+
+  <script>
+    const difficulty = document.querySelector("#difficulty");
+    const form = document.querySelector("#guess-form");
+    const guessInput = document.querySelector("#guess");
+    const status = document.querySelector("#status");
+    const attemptsLabel = document.querySelector("#attempts");
+    const newGameButton = document.querySelector("#new-game");
+
+    let maximum = Number(difficulty.value);
+    let secretNumber = makeSecretNumber();
+    let attempts = 0;
+    let finished = false;
+
+    function makeSecretNumber() {
+      return Math.floor(Math.random() * maximum) + 1;
+    }
+
+    function startNewGame() {
+      maximum = Number(difficulty.value);
+      secretNumber = makeSecretNumber();
+      attempts = 0;
+      finished = false;
+      guessInput.max = String(maximum);
+      guessInput.value = "";
+      guessInput.disabled = false;
+      form.querySelector("button").disabled = false;
+      attemptsLabel.textContent = "Guesses: 0";
+      status.textContent = `I'm thinking of a number from 1 to ${maximum}.`;
+      newGameButton.hidden = true;
+      guessInput.focus();
+    }
+
+    difficulty.addEventListener("change", startNewGame);
+    newGameButton.addEventListener("click", startNewGame);
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (finished) return;
+
+      const guess = Number(guessInput.value);
+      if (!Number.isInteger(guess) || guess < 1 || guess > maximum) {
+        status.textContent = `Enter a whole number from 1 to ${maximum}.`;
+        guessInput.focus();
+        return;
+      }
+
+      attempts += 1;
+      attemptsLabel.textContent = `Guesses: ${attempts}`;
+      if (guess < secretNumber) {
+        status.textContent = "Too low — try a higher number.";
+      } else if (guess > secretNumber) {
+        status.textContent = "Too high — try a lower number.";
+      } else {
+        status.textContent = `You got it! The number was ${secretNumber}.`;
+        finished = true;
+        guessInput.disabled = true;
+        form.querySelector("button").disabled = true;
+        newGameButton.hidden = false;
+      }
+      guessInput.select();
+    });
+
+    startNewGame();
+  </script>
+</body>
+</html>
